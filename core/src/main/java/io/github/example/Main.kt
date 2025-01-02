@@ -10,6 +10,10 @@ import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.FrameBuffer
 import com.badlogic.gdx.utils.ScreenUtils
+import com.badlogic.gdx.utils.TimeUtils
+import java.sql.Time
+import java.time.LocalTime
+import javax.management.timer.Timer
 import kotlin.random.Random
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
@@ -17,22 +21,30 @@ class Main : ApplicationAdapter() {
     private lateinit var batch: SpriteBatch
     private lateinit var grassTexture: Texture
     private lateinit var waterTexture: Texture
+    private lateinit var mountainTexture: Texture
     private val entities = mutableListOf<Entity>()
     private lateinit var terrain: Array<IntArray>
     private lateinit var terrainTexture: FrameBuffer
 
-    private val TILE_SIZE = 32
+    private val TILE_SIZE = 16
     private val TERRAIN_GRASS = 0
     private val TERRAIN_WATER = 1
     private val TERRAIN_FOREST = 2
     private val TERRAIN_MOUNTAIN = 3
 
+    // Параметры для Перлин-шума
+    private var noiseScale = Random.nextFloat() - 0.3f
+    private val octaves = 3
+    private val persistence = 0.9f
+
     override fun create() {
         batch = SpriteBatch()
+        println(noiseScale)
         grassTexture = Texture("grass.png")
         waterTexture = Texture("water.png")
+        mountainTexture = Texture("sand.png") // TODO замени потом текстуру
 
-        terrain = generateTerrain(30, 22)
+        terrain = generateTerrain(60, 44)
         terrainTexture = FrameBuffer(Pixmap.Format.RGBA8888, terrain.size * TILE_SIZE, terrain[0].size * TILE_SIZE, false)
 
         renderTerrainToTexture()
@@ -67,16 +79,41 @@ class Main : ApplicationAdapter() {
 
     private fun generateTerrain(width: Int, height: Int): Array<IntArray> {
         val terrain = Array(width) { IntArray(height) }
+
         for (x in 0 until width) {
             for (y in 0 until height) {
-                terrain[x][y] = when (Random.nextInt(0, 2)) {
-                    0 -> TERRAIN_GRASS
-                    1 -> TERRAIN_WATER
-                    else -> TERRAIN_FOREST
+                val noiseValue = perlinNoise(x * noiseScale, y * noiseScale)
+
+                // Преобразуем шумовое значение в типы местности
+                terrain[x][y] = when {
+                    noiseValue < -0.05 -> TERRAIN_WATER
+                    noiseValue < 0.2 -> TERRAIN_GRASS
+                    else -> TERRAIN_MOUNTAIN
                 }
             }
         }
         return terrain
+    }
+
+    private fun perlinNoise(x: Float, y: Float): Float {
+        // Функция для создания многослойного Перлин-шума
+        var total = 0f
+        var frequency = 1f
+        var amplitude = 1f
+        var maxValue = 0f
+
+        for (i in 0 until octaves) {
+            total += noise(x * frequency, y * frequency) * amplitude
+            maxValue += amplitude
+            amplitude *= persistence
+            frequency *= 2f
+        }
+
+        return total / maxValue
+    }
+
+    private fun noise(x: Float, y: Float): Float {
+        return ((Math.sin(x.toDouble()) + Math.cos(y.toDouble())) / 2).toFloat()
     }
 
     private fun renderTerrainToTexture() {
@@ -88,6 +125,7 @@ class Main : ApplicationAdapter() {
                 when (terrain[x][y]) {
                     TERRAIN_GRASS -> drawTile(grassTexture, x, y)
                     TERRAIN_WATER -> drawTile(waterTexture, x, y)
+                    TERRAIN_MOUNTAIN -> drawTile(mountainTexture, x, y)
                 }
             }
         }
