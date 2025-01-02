@@ -13,19 +13,21 @@ class Main : ApplicationAdapter() {
     private lateinit var batch: SpriteBatch
     private lateinit var sprite: Sprite
     private lateinit var image: Texture
+    private lateinit var entity: Entity
 
     override fun create() {
         batch = SpriteBatch()
         image = Texture("human.png")
         sprite = Sprite(image)
+        entity = Entity(0,100, sprite)
     }
 
     override fun render() {
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f)
         batch.begin()
         handleInput()
-        sprite.setSize(50f, 60f)
-        sprite.draw(batch)
+        entity.sprite.setSize(50f, 60f)
+        entity.sprite.draw(batch)
         batch.end()
     }
 
@@ -39,7 +41,7 @@ class Main : ApplicationAdapter() {
         val delta = Gdx.graphics.deltaTime
 
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
-            sprite.translateX(speed * delta)
+            entity.sprite.translateX(speed * delta)
         }
     }
 }
