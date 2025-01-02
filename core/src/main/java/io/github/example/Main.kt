@@ -9,6 +9,9 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.glutils.FrameBuffer
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
+import com.badlogic.gdx.scenes.scene2d.ui.Skin
+import com.badlogic.gdx.scenes.scene2d.ui.Widget
 import com.badlogic.gdx.utils.ScreenUtils
 import com.badlogic.gdx.utils.TimeUtils
 import java.sql.Time
@@ -23,6 +26,7 @@ class Main : ApplicationAdapter() {
     private lateinit var waterTexture: Texture
     private lateinit var mountainTexture: Texture
     private val entities = mutableListOf<Entity>()
+    private val trees = mutableListOf<Object>()
     private lateinit var terrain: Array<IntArray>
     private lateinit var terrainTexture: FrameBuffer
 
@@ -33,7 +37,7 @@ class Main : ApplicationAdapter() {
     private val TERRAIN_MOUNTAIN = 3
 
     // Параметры для Перлин-шума
-    private var noiseScale = Random.nextFloat() - 0.3f
+    private var noiseScale = Random.nextFloat() - 0.4f
     private val octaves = 3
     private val persistence = 0.9f
 
@@ -49,12 +53,8 @@ class Main : ApplicationAdapter() {
 
         renderTerrainToTexture()
 
-        for (n in 0..10) {
-            val entitySprite = Sprite(Texture("human.png"))
-            entitySprite.x = Random.nextInt(0, 940).toFloat()
-            entitySprite.y = Random.nextInt(0, 680).toFloat()
-            entities.add(Entity(n, n + 10, entitySprite, batch))
-        }
+        populateEntities(10)
+        spawnTrees(20)
     }
 
     override fun render() {
@@ -68,6 +68,11 @@ class Main : ApplicationAdapter() {
             entity.sprite.draw(batch)
         }
 
+        for (tree in trees){
+            tree.sprite.setSize(50f, 60f)
+            tree.sprite.draw(batch)
+        }
+
         batch.end()
     }
 
@@ -75,6 +80,24 @@ class Main : ApplicationAdapter() {
         batch.dispose()
         grassTexture.dispose()
         waterTexture.dispose()
+    }
+
+    private fun populateEntities(count: Int) {
+        for (n in 0 until count) {
+            val entitySprite = Sprite(Texture("human.png"))
+            entitySprite.x = Random.nextInt(0, 60 * TILE_SIZE).toFloat()
+            entitySprite.y = Random.nextInt(0, 44 * TILE_SIZE).toFloat()
+            entities.add(Entity(n, n + 10, entitySprite, batch))
+        }
+    }
+
+    private fun spawnTrees(count: Int) {
+        for (n in 0 until count) {
+            val entitySprite = Sprite(Texture("tree.png"))
+            entitySprite.x = Random.nextInt(0, 60 * TILE_SIZE).toFloat()
+            entitySprite.y = Random.nextInt(0, 44 * TILE_SIZE).toFloat()
+            trees.add(Object(n, n + 10, entitySprite, batch))
+        }
     }
 
     private fun generateTerrain(width: Int, height: Int): Array<IntArray> {
