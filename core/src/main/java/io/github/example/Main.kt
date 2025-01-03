@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.ai.GdxAI
+import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Sprite
@@ -29,6 +30,7 @@ class Main : ApplicationAdapter() {
     private val trees = mutableListOf<Object>()
     private lateinit var terrain: Array<IntArray>
     private lateinit var terrainTexture: FrameBuffer
+    private lateinit var camera: OrthographicCamera
 
     private val TILE_SIZE = 16
     private val TERRAIN_GRASS = 0
@@ -48,6 +50,10 @@ class Main : ApplicationAdapter() {
         waterTexture = Texture("water.png")
         mountainTexture = Texture("sand.png") // TODO замени потом текстуру
 
+        camera = OrthographicCamera(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
+        camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 0f)
+        camera.update()
+
         terrain = generateTerrain(60, 44)
         terrainTexture = FrameBuffer(Pixmap.Format.RGBA8888, terrain.size * TILE_SIZE, terrain[0].size * TILE_SIZE, false)
 
@@ -58,7 +64,13 @@ class Main : ApplicationAdapter() {
     }
 
     override fun render() {
+
+        handleCameraMovement()
+
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f)
+        batch.projectionMatrix = camera.combined
+
+
         batch.begin()
         renderTerrain()
         handleInput()
@@ -155,6 +167,25 @@ class Main : ApplicationAdapter() {
 
         batch.end()
         terrainTexture.end()
+    }
+
+    private fun handleCameraMovement() {
+        val speed = 200f * Gdx.graphics.deltaTime // Скорость движения камеры
+
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+            camera.translate(0f, speed) // Движение вверх
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+            camera.translate(0f, -speed) // Движение вниз
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+            camera.translate(-speed, 0f) // Движение влево
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+            camera.translate(speed, 0f) // Движение вправо
+        }
+
+        camera.update() // Обновляем камеру
     }
 
     private fun renderTerrain() {
