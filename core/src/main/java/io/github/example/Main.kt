@@ -4,8 +4,6 @@ import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputMultiplexer
-import com.badlogic.gdx.ai.GdxAI
-import com.badlogic.gdx.graphics.Cursor
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
@@ -16,15 +14,9 @@ import com.badlogic.gdx.graphics.glutils.FrameBuffer
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
-import com.badlogic.gdx.scenes.scene2d.ui.Skin
-import com.badlogic.gdx.scenes.scene2d.ui.Widget
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.ScreenUtils
-import com.badlogic.gdx.utils.TimeUtils
-import java.sql.Time
-import java.time.LocalTime
-import javax.management.timer.Timer
 import kotlin.random.Random
 
 /** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
@@ -33,7 +25,7 @@ class Main : ApplicationAdapter() {
     private lateinit var grassTexture: Texture
     private lateinit var waterTexture: Texture
     private lateinit var mountainTexture: Texture
-    private val entities = mutableListOf<Entity>()
+    private val pawns = mutableListOf<PlayerPawn>()
     private val trees = mutableListOf<Object>()
     private lateinit var terrain: Array<IntArray>
     private lateinit var terrainTexture: FrameBuffer
@@ -125,7 +117,7 @@ class Main : ApplicationAdapter() {
         batch.begin()
         renderTerrain()
 
-        for (entity in entities) {
+        for (entity in pawns) {
             entity.sprite.setSize(50f, 60f)
 
             // Стремимся к последней установленной стене
@@ -234,7 +226,7 @@ class Main : ApplicationAdapter() {
             val entitySprite = Sprite(Texture("human.png"))
             entitySprite.x = Random.nextInt(0, 60 * TILE_SIZE).toFloat()
             entitySprite.y = Random.nextInt(0, 44 * TILE_SIZE).toFloat()
-            entities.add(Entity(n, n + 10, entitySprite, batch))
+            pawns.add(PlayerPawn(n, n + 10, 0, entitySprite, batch, 0, 0, 0))
         }
     }
 
