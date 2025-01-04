@@ -52,6 +52,7 @@ class Main : ApplicationAdapter() {
     private val walls = mutableListOf<Sprite>()
     private var isCreatingWall = false // Флаг для отслеживания режима создания стены
     private var previewWall: Sprite? = null
+    private val tasks = mutableListOf<Task>()
 
     private val TILE_SIZE = 16
     private val TERRAIN_GRASS = 0
@@ -126,6 +127,13 @@ class Main : ApplicationAdapter() {
 
         for (entity in entities) {
             entity.sprite.setSize(50f, 60f)
+
+            // Стремимся к последней установленной стене
+            if (tasks.isNotEmpty()) {
+                val targetTask = tasks[tasks.size - 1] // Получаем последнюю задачу
+                moveEntityTowards(entity, targetTask)
+            }
+
             entity.sprite.draw(batch)
         }
 
@@ -211,12 +219,14 @@ class Main : ApplicationAdapter() {
     }
 
     private fun placeWall(x: Float, y: Float) {
-        // Создаем спрайт стены и устанавливаем его позицию
         val wallSprite = Sprite(wallTexture).apply {
-            setSize(50f, 50f) // Задайте размер стены
-            setPosition(x - width / 2, y - height / 2) // Центрируем стену по позиции мыши
+            setSize(50f, 50f)
+            setPosition(x - width / 2, y - height / 2)
         }
-        walls.add(wallSprite) // Добавляем спрайт стены в список
+        walls.add(wallSprite)
+
+        // Добавляем задачу для перемещения сущностей к стене
+        tasks.add(Task(x, y, 1))
     }
 
     private fun populateEntities(count: Int) {
@@ -300,6 +310,19 @@ class Main : ApplicationAdapter() {
 
     private fun drawTile(texture: Texture, x: Int, y: Int) {
         batch.draw(texture, x * TILE_SIZE.toFloat(), y * TILE_SIZE.toFloat(), TILE_SIZE.toFloat(), TILE_SIZE.toFloat())
+    }
+
+    private fun moveEntityTowards(entity: Entity, task: Task) {
+        val speed = 100f * Gdx.graphics.deltaTime // Скорость движения
+        val dx = task.x - entity.sprite.x
+        val dy = task.y - entity.sprite.y
+        val distance = Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+
+        if (distance > 1f) { // Если сущность не достигла цели
+            // Нормализуем вектор и умножаем на скорость
+            entity.sprite.x += (dx / distance) * speed
+            entity.sprite.y += (dy / distance) * speed
+        }
     }
 
 }
