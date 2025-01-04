@@ -3,6 +3,7 @@ package io.github.example
 import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
+import com.badlogic.gdx.InputMultiplexer
 import com.badlogic.gdx.ai.GdxAI
 import com.badlogic.gdx.graphics.Cursor
 import com.badlogic.gdx.graphics.OrthographicCamera
@@ -84,7 +85,13 @@ class Main : ApplicationAdapter() {
 
         camera = OrthographicCamera(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         inputProcessor = MyInputProcessor(camera)
-        Gdx.input.inputProcessor = inputProcessor
+
+        // Настройка InputMultiplexer для совместной обработки ввода
+        val inputMultiplexer = InputMultiplexer()
+        inputMultiplexer.addProcessor(stage)
+        inputMultiplexer.addProcessor(inputProcessor)
+
+        Gdx.input.inputProcessor = inputMultiplexer
         camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 0f)
         camera.update()
 
@@ -98,12 +105,11 @@ class Main : ApplicationAdapter() {
     }
 
     override fun render() {
-
+        // Обновляем камеру
         inputProcessor.handleCameraMovement(Gdx.graphics.deltaTime)
 
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f)
         batch.projectionMatrix = camera.combined
-
 
         batch.begin()
         renderTerrain()
@@ -114,13 +120,14 @@ class Main : ApplicationAdapter() {
             entity.sprite.draw(batch)
         }
 
-        for (tree in trees){
+        for (tree in trees) {
             tree.sprite.setSize(50f, 60f)
             tree.sprite.draw(batch)
         }
 
         batch.end()
 
+        // Обновляем сцену UI
         stage.act(Gdx.graphics.deltaTime)
         stage.draw()
     }
