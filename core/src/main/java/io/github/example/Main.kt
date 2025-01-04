@@ -10,10 +10,13 @@ import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.glutils.FrameBuffer
+import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Widget
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.ScreenUtils
 import com.badlogic.gdx.utils.TimeUtils
 import java.sql.Time
@@ -33,6 +36,11 @@ class Main : ApplicationAdapter() {
     private lateinit var terrainTexture: FrameBuffer
     private lateinit var camera: OrthographicCamera
     private lateinit var inputProcessor: MyInputProcessor
+    private lateinit var stage: Stage
+    private lateinit var toolsButton: ImageButton
+    private lateinit var toolsButtonNormal: Texture
+    private lateinit var toolsButtonHover: Texture
+    private lateinit var toolsButtonPressed: Texture
 
     private val TILE_SIZE = 16
     private val TERRAIN_GRASS = 0
@@ -47,10 +55,32 @@ class Main : ApplicationAdapter() {
 
     override fun create() {
         batch = SpriteBatch()
-        println(noiseScale)
+        stage = Stage()
         grassTexture = Texture("grass.png")
         waterTexture = Texture("water.png")
         mountainTexture = Texture("sand.png") // TODO замени потом текстуру
+
+        toolsButtonNormal = Texture("tools_Button.png")
+        toolsButtonHover = Texture("tools_Button_hover.png")
+        toolsButtonPressed = Texture("tools_Button_pressed.png")
+
+        val normalDrawable = TextureRegionDrawable(TextureRegion(toolsButtonNormal))
+        val hoverDrawable = TextureRegionDrawable(TextureRegion(toolsButtonHover))
+        val pressedDrawable = TextureRegionDrawable(TextureRegion(toolsButtonPressed))
+
+        // Создаём стиль кнопки
+        val buttonStyle = ImageButton.ImageButtonStyle()
+        buttonStyle.up = normalDrawable
+        buttonStyle.over = hoverDrawable
+        buttonStyle.down = pressedDrawable
+
+        // Создаём кнопку и устанавливаем стиль
+        toolsButton = ImageButton(buttonStyle)
+        toolsButton.setSize(38f, 38f) // Устанавливаем размер
+        toolsButton.setPosition(10f, 10f) // Устанавливаем позицию в левом нижнем углу
+
+        // Добавляем кнопку на сцену
+        stage.addActor(toolsButton)
 
         camera = OrthographicCamera(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         inputProcessor = MyInputProcessor(camera)
@@ -90,12 +120,19 @@ class Main : ApplicationAdapter() {
         }
 
         batch.end()
+
+        stage.act(Gdx.graphics.deltaTime)
+        stage.draw()
     }
 
     override fun dispose() {
         batch.dispose()
         grassTexture.dispose()
         waterTexture.dispose()
+        mountainTexture.dispose()
+        toolsButtonNormal.dispose()
+        toolsButtonHover.dispose()
+        toolsButtonPressed.dispose()
     }
 
     private fun populateEntities(count: Int) {
@@ -136,10 +173,10 @@ class Main : ApplicationAdapter() {
 
     private fun perlinNoise(x: Float, y: Float): Float {
         // Функция для создания многослойного Перлин-шума
-        var total = 0f
+        var total = 0.5f
         var frequency = 1f
         var amplitude = 1f
-        var maxValue = 0f
+        var maxValue = 2.5f
 
         for (i in 0 until octaves) {
             total += noise(x * frequency, y * frequency) * amplitude
