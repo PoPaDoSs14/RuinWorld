@@ -13,10 +13,12 @@ import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.glutils.FrameBuffer
+import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
 import com.badlogic.gdx.scenes.scene2d.ui.Skin
 import com.badlogic.gdx.scenes.scene2d.ui.Widget
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable
 import com.badlogic.gdx.utils.ScreenUtils
 import com.badlogic.gdx.utils.TimeUtils
@@ -46,6 +48,10 @@ class Main : ApplicationAdapter() {
     private lateinit var createButtonNormal: Texture
     private lateinit var createButtonHover: Texture
     private lateinit var createButtonPressed: Texture
+    private lateinit var wallTexture: Texture // Текстура стены
+    private val walls = mutableListOf<Sprite>()
+    private var isCreatingWall = false // Флаг для отслеживания режима создания стены
+    private var previewWall: Sprite? = null
 
     private val TILE_SIZE = 16
     private val TERRAIN_GRASS = 0
@@ -85,9 +91,78 @@ class Main : ApplicationAdapter() {
 
         populateEntities(10)
         spawnTrees(20)
+
+        createButton.addListener(object : ClickListener() {
+            override fun clicked(event: InputEvent, x: Float, y: Float) {
+                isCreatingWall = true // Включаем режим создания стены
+                previewWall = Sprite(wallTexture)
+            }
+        })
+    }
+
+    override fun render() {
+        // Обновляем камеру
+        inputProcessor.handleCameraMovement(Gdx.graphics.deltaTime)
+
+        ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f)
+        batch.projectionMatrix = camera.combined
+
+
+        // Обновляем положение предварительной стены
+        if (isCreatingWall && previewWall != null) {
+            val mouseX = Gdx.input.x.toFloat()
+            val mouseY = Gdx.graphics.height - Gdx.input.y.toFloat()
+            previewWall!!.setPosition(mouseX - previewWall!!.width / 2, mouseY - previewWall!!.height / 2)
+
+            if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
+                placeWall(previewWall!!.x + previewWall!!.width / 2, previewWall!!.y + previewWall!!.height / 2)
+                isCreatingWall = false // Завершаем режим создания стены
+                previewWall = null // Убираем предварительную стену
+            }
+        }
+
+        batch.begin()
+        renderTerrain()
+
+        for (entity in entities) {
+            entity.sprite.setSize(50f, 60f)
+            entity.sprite.draw(batch)
+        }
+
+        for (tree in trees) {
+            tree.sprite.setSize(50f, 60f)
+            tree.sprite.draw(batch)
+        }
+
+        for (wall in walls) {
+            wall.draw(batch)
+        }
+
+        previewWall?.draw(batch)
+
+        batch.end()
+
+        // Обновляем сцену UI
+        stage.act(Gdx.graphics.deltaTime)
+        stage.draw()
+    }
+
+    override fun dispose() {
+        batch.dispose()
+        grassTexture.dispose()
+        waterTexture.dispose()
+        mountainTexture.dispose()
+        toolsButtonNormal.dispose()
+        toolsButtonHover.dispose()
+        toolsButtonPressed.dispose()
+        stage.dispose()
+        wallTexture.dispose()
     }
 
     private fun initTexture() {
+
+        wallTexture = Texture("wall.png")
+
         grassTexture = Texture("grass.png")
         waterTexture = Texture("water.png")
         mountainTexture = Texture("sand.png") // TODO замени потом текстуру
@@ -135,42 +210,13 @@ class Main : ApplicationAdapter() {
         stage.addActor(createButton)
     }
 
-    override fun render() {
-        // Обновляем камеру
-        inputProcessor.handleCameraMovement(Gdx.graphics.deltaTime)
-
-        ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f)
-        batch.projectionMatrix = camera.combined
-
-        batch.begin()
-        renderTerrain()
-        handleInput()
-
-        for (entity in entities) {
-            entity.sprite.setSize(50f, 60f)
-            entity.sprite.draw(batch)
+    private fun placeWall(x: Float, y: Float) {
+        // Создаем спрайт стены и устанавливаем его позицию
+        val wallSprite = Sprite(wallTexture).apply {
+            setSize(50f, 50f) // Задайте размер стены
+            setPosition(x - width / 2, y - height / 2) // Центрируем стену по позиции мыши
         }
-
-        for (tree in trees) {
-            tree.sprite.setSize(50f, 60f)
-            tree.sprite.draw(batch)
-        }
-
-        batch.end()
-
-        // Обновляем сцену UI
-        stage.act(Gdx.graphics.deltaTime)
-        stage.draw()
-    }
-
-    override fun dispose() {
-        batch.dispose()
-        grassTexture.dispose()
-        waterTexture.dispose()
-        mountainTexture.dispose()
-        toolsButtonNormal.dispose()
-        toolsButtonHover.dispose()
-        toolsButtonPressed.dispose()
+        walls.add(wallSprite) // Добавляем спрайт стены в список
     }
 
     private fun populateEntities(count: Int) {
@@ -256,31 +302,4 @@ class Main : ApplicationAdapter() {
         batch.draw(texture, x * TILE_SIZE.toFloat(), y * TILE_SIZE.toFloat(), TILE_SIZE.toFloat(), TILE_SIZE.toFloat())
     }
 
-    private fun handleInput() {
-        val speed = 60f
-        val delta = Gdx.graphics.deltaTime
-
-        val cursorX = Gdx.input.x
-        val cursorY = Gdx.graphics.height - Gdx.input.y
-
-        for (entity in entities) {
-            // Передвижение по оси X
-            if (cursorX != entity.sprite.x.toInt()) {
-                if (cursorX > entity.sprite.x.toInt()) {
-                    entity.sprite.translateX(speed * delta)
-                } else {
-                    entity.sprite.translateX(-speed * delta)
-                }
-            }
-
-            // Передвижение по оси Y
-            if (cursorY != entity.sprite.y.toInt()) {
-                if (cursorY > entity.sprite.y.toInt()) {
-                    entity.sprite.translateY(speed * delta)
-                } else {
-                    entity.sprite.translateY(-speed * delta)
-                }
-            }
-        }
-    }
 }
