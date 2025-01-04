@@ -42,6 +42,10 @@ class Main : ApplicationAdapter() {
     private lateinit var toolsButtonNormal: Texture
     private lateinit var toolsButtonHover: Texture
     private lateinit var toolsButtonPressed: Texture
+    private lateinit var createButton: ImageButton
+    private lateinit var createButtonNormal: Texture
+    private lateinit var createButtonHover: Texture
+    private lateinit var createButtonPressed: Texture
 
     private val TILE_SIZE = 16
     private val TERRAIN_GRASS = 0
@@ -57,31 +61,10 @@ class Main : ApplicationAdapter() {
     override fun create() {
         batch = SpriteBatch()
         stage = Stage()
-        grassTexture = Texture("grass.png")
-        waterTexture = Texture("water.png")
-        mountainTexture = Texture("sand.png") // TODO замени потом текстуру
 
-        toolsButtonNormal = Texture("tools_Button.png")
-        toolsButtonHover = Texture("tools_Button_hover.png")
-        toolsButtonPressed = Texture("tools_Button_pressed.png")
+        initTexture()
 
-        val normalDrawable = TextureRegionDrawable(TextureRegion(toolsButtonNormal))
-        val hoverDrawable = TextureRegionDrawable(TextureRegion(toolsButtonHover))
-        val pressedDrawable = TextureRegionDrawable(TextureRegion(toolsButtonPressed))
-
-        // Создаём стиль кнопки
-        val buttonStyle = ImageButton.ImageButtonStyle()
-        buttonStyle.up = normalDrawable
-        buttonStyle.over = hoverDrawable
-        buttonStyle.down = pressedDrawable
-
-        // Создаём кнопку и устанавливаем стиль
-        toolsButton = ImageButton(buttonStyle)
-        toolsButton.setSize(38f, 38f) // Устанавливаем размер
-        toolsButton.setPosition(10f, 10f) // Устанавливаем позицию в левом нижнем углу
-
-        // Добавляем кнопку на сцену
-        stage.addActor(toolsButton)
+        addButtons()
 
         camera = OrthographicCamera(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         inputProcessor = MyInputProcessor(camera)
@@ -102,6 +85,54 @@ class Main : ApplicationAdapter() {
 
         populateEntities(10)
         spawnTrees(20)
+    }
+
+    private fun initTexture() {
+        grassTexture = Texture("grass.png")
+        waterTexture = Texture("water.png")
+        mountainTexture = Texture("sand.png") // TODO замени потом текстуру
+
+        toolsButtonNormal = Texture("buttons/tools_Button.png")
+        toolsButtonHover = Texture("buttons/tools_Button_hover.png")
+        toolsButtonPressed = Texture("buttons/tools_Button_pressed.png")
+
+        createButtonNormal = Texture("buttons/create_Button.png")
+        createButtonHover = Texture("buttons/create_Button_hover.png")
+        createButtonPressed = Texture("buttons/create_Button_pressed.png")
+    }
+
+    private fun addButtons() {
+        val toolsNormalDrawable = TextureRegionDrawable(TextureRegion(toolsButtonNormal))
+        val toolsHoverDrawable = TextureRegionDrawable(TextureRegion(toolsButtonHover))
+        val toolsPressedDrawable = TextureRegionDrawable(TextureRegion(toolsButtonPressed))
+
+        val createNormalDrawable = TextureRegionDrawable(TextureRegion(createButtonNormal))
+        val createHoverDrawable = TextureRegionDrawable(TextureRegion(createButtonHover))
+        val createPressedDrawable = TextureRegionDrawable(TextureRegion(createButtonPressed))
+
+        // Создаём стиль кнопки
+        val toolsButtonStyle = ImageButton.ImageButtonStyle()
+        toolsButtonStyle.up = toolsNormalDrawable
+        toolsButtonStyle.over = toolsHoverDrawable
+        toolsButtonStyle.down = toolsPressedDrawable
+
+        val createButtonStyle = ImageButton.ImageButtonStyle()
+        createButtonStyle.up = createNormalDrawable
+        createButtonStyle.over = createHoverDrawable
+        createButtonStyle.down = createPressedDrawable
+
+        // Создаём кнопку и устанавливаем стиль
+        toolsButton = ImageButton(toolsButtonStyle)
+        toolsButton.setSize(38f, 38f) // Устанавливаем размер
+        toolsButton.setPosition(10f, 10f) // Устанавливаем позицию в левом нижнем углу
+
+        createButton = ImageButton(createButtonStyle)
+        createButton.setSize(38f, 38f) // Устанавливаем размер
+        createButton.setPosition(60f, 10f) // Устанавливаем позицию в левом нижнем углу
+
+        // Добавляем кнопку на сцену
+        stage.addActor(toolsButton)
+        stage.addActor(createButton)
     }
 
     override fun render() {
