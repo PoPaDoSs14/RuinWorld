@@ -4,6 +4,7 @@ import com.badlogic.gdx.ApplicationAdapter
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.Input
 import com.badlogic.gdx.InputMultiplexer
+import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.Pixmap
 import com.badlogic.gdx.graphics.Texture
@@ -11,6 +12,8 @@ import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.graphics.glutils.FrameBuffer
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.scenes.scene2d.InputEvent
 import com.badlogic.gdx.scenes.scene2d.Stage
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton
@@ -45,6 +48,7 @@ class Main : ApplicationAdapter() {
     private var isCreatingWall = false // Флаг для отслеживания режима создания стены
     private var previewWall: Sprite? = null
     private val tasks = mutableListOf<Task>()
+    private lateinit var selectionProcessor: SelectionProcessor
 
     private val TILE_SIZE = 16
     private val TERRAIN_GRASS = 0
@@ -67,11 +71,13 @@ class Main : ApplicationAdapter() {
 
         camera = OrthographicCamera(Gdx.graphics.width.toFloat(), Gdx.graphics.height.toFloat())
         inputProcessor = MyInputProcessor(camera)
+        selectionProcessor = SelectionProcessor(camera)
 
         // Настройка InputMultiplexer для совместной обработки ввода
         val inputMultiplexer = InputMultiplexer()
         inputMultiplexer.addProcessor(stage)
         inputMultiplexer.addProcessor(inputProcessor)
+        inputMultiplexer.addProcessor(selectionProcessor)
 
         Gdx.input.inputProcessor = inputMultiplexer
         camera.position.set(camera.viewportWidth / 2, camera.viewportHeight / 2, 0f)
@@ -99,7 +105,6 @@ class Main : ApplicationAdapter() {
 
         ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f)
         batch.projectionMatrix = camera.combined
-
 
         // Обновляем положение предварительной стены
         if (isCreatingWall && previewWall != null) {
@@ -141,6 +146,8 @@ class Main : ApplicationAdapter() {
         previewWall?.draw(batch)
 
         batch.end()
+
+        selectionProcessor.renderSelection()
 
         // Обновляем сцену UI
         stage.act(Gdx.graphics.deltaTime)
@@ -328,6 +335,22 @@ class Main : ApplicationAdapter() {
             // Нормализуем вектор и умножаем на скорость
             entity.sprite.x += (dx / distance) * speed
             entity.sprite.y += (dy / distance) * speed
+        }
+    }
+
+    private fun createWallsInSelection(start: Vector2, end: Vector2) {
+        // Получаем координаты сетки для начала и конца выделения
+        val topLeft = worldToGridCoordinates(start.x, start.y)
+        val bottomRight = worldToGridCoordinates(end.x, end.y)
+
+        // Итерируемся по всей области выделения и создаем стены
+        for (gridX in topLeft.first..bottomRight.first) {
+            for (gridY in topLeft.second..bottomRight.second) {
+                // Изменяем позицию, чтобы установить стену по сетке
+                val wallPositionX = gridX * TILE_SIZE
+                val wallPositionY = gridY * TILE_SIZE
+                placeWall(wallPositionX.toFloat(), wallPositionY.toFloat())
+            }
         }
     }
 
