@@ -11,10 +11,19 @@ class PlayerPawn(
     batch: SpriteBatch,
     var mentalWork: Int,
     var building: Int,
-    var combatSkills: Int
+    var combatSkills: Int,
+    var task: Task?
 ) : Entity(
     id, health,hunger, sprite, batch
 ) {
+
+    fun attack(entity: Entity) {
+
+    }
+
+    fun building(x: Float, y: Float) {
+
+    }
 
 
 }
