@@ -327,14 +327,26 @@ class Main : ApplicationAdapter() {
 
     private fun moveEntityTowards(entity: Entity, task: Task) {
         val speed = 100f * Gdx.graphics.deltaTime // Скорость движения
-        val dx = task.x - entity.sprite.x
-        val dy = task.y - entity.sprite.y
+
+        // Получаем координаты сетки цели
+        val (gridX, gridY) = worldToGridCoordinates(task.x, task.y)
+
+        // Переводим координаты сетки обратно в мировые координаты
+        val targetX = gridX * TILE_SIZE
+        val targetY = gridY * TILE_SIZE
+
+        val dx = targetX - entity.sprite.x
+        val dy = targetY - entity.sprite.y
         val distance = Math.sqrt((dx * dx + dy * dy).toDouble()).toFloat()
 
         if (distance > 1f) { // Если сущность не достигла цели
             // Нормализуем вектор и умножаем на скорость
             entity.sprite.x += (dx / distance) * speed
             entity.sprite.y += (dy / distance) * speed
+        } else {
+            // Если сущность близка к цели, установить её на точную позицию
+            entity.sprite.x = targetX.toFloat()
+            entity.sprite.y = targetY.toFloat()
         }
     }
 

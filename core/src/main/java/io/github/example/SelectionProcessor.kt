@@ -8,9 +8,12 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer
 import com.badlogic.gdx.math.Vector3
 
 class SelectionProcessor(private val camera: OrthographicCamera) : InputAdapter() {
-    private var selectionStart: Vector3? = null
-    private var selectionEnd: Vector3? = null
-    private var isSelecting = false
+    var isSelecting = false
+    var isHolding = false
+    var selectionStart: Vector3? = null
+    var selectionEnd: Vector3? = null
+    var holdDuration: Float = 0f // Длительность удержания в секундах
+    val requiredHoldTime: Float = 0.5f // Необходимое время удержания в секундах
     private val shapeRenderer = ShapeRenderer()
 
     override fun touchDown(screenX: Int, screenY: Int, pointer: Int, button: Int): Boolean {
