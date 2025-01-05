@@ -123,7 +123,7 @@ class Main : ApplicationAdapter() {
         renderTerrain()
 
         for (entity in pawns) {
-            entity.sprite.setSize(50f, 60f)
+            entity.sprite.setSize(25f, 30f)
 
             // Стремимся к последней установленной стене
             if (tasks.isNotEmpty()) {
