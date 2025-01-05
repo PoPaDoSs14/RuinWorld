@@ -210,15 +210,29 @@ class Main : ApplicationAdapter() {
         stage.addActor(createButton)
     }
 
+    private fun worldToGridCoordinates(x: Float, y: Float): Pair<Int, Int> {
+        val gridX = (x / TILE_SIZE).toInt()
+        val gridY = (y / TILE_SIZE).toInt()
+        return Pair(gridX, gridY)
+    }
+
     private fun placeWall(x: Float, y: Float) {
+        // Преобразуем мировые координаты в координаты клетки
+        val (gridX, gridY) = worldToGridCoordinates(x, y)
+
+        // Рассчитываем мировые координаты верхнего левого угла клетки
+        val positionX = gridX * TILE_SIZE
+        val positionY = gridY * TILE_SIZE
+
+        // Создаем спрайт стены и устанавливаем его позицию
         val wallSprite = Sprite(wallTexture).apply {
-            setSize(50f, 50f)
-            setPosition(x - width / 2, y - height / 2)
+            setSize(TILE_SIZE.toFloat(), TILE_SIZE.toFloat()) // Задайте размер стены
+            setPosition(positionX.toFloat(), positionY.toFloat()) // Устанавливаем на сетку
         }
-        walls.add(wallSprite)
+        walls.add(wallSprite) // Добавляем спрайт стены в список
 
         // Добавляем задачу для перемещения сущностей к стене
-        tasks.add(Task(x, y, 1))
+        tasks.add(Task(positionX + TILE_SIZE / 2f, positionY + TILE_SIZE / 2f, 0)) // Центрируем задачу
     }
 
     private fun populateEntities(count: Int) {
