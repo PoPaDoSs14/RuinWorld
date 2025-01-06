@@ -48,6 +48,7 @@ class Main : ApplicationAdapter() {
     private var isCreatingWall = false // Флаг для отслеживания режима создания стены
     private var previewWall: Sprite? = null
     private val tasks = mutableListOf<Task>()
+    private lateinit var playerColony: PlayerColony
     private lateinit var selectionProcessor: SelectionProcessor
 
     private val TILE_SIZE = 16
@@ -64,6 +65,7 @@ class Main : ApplicationAdapter() {
     override fun create() {
         batch = SpriteBatch()
         stage = Stage()
+        playerColony = PlayerColony(pawns.size, pawns, tasks, 0)
 
         initTexture()
 
