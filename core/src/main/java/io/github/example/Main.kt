@@ -247,7 +247,7 @@ class Main : ApplicationAdapter() {
             val entitySprite = Sprite(Texture("human.png"))
             entitySprite.x = Random.nextInt(0, 60 * TILE_SIZE).toFloat()
             entitySprite.y = Random.nextInt(0, 44 * TILE_SIZE).toFloat()
-            pawns.add(PlayerPawn(n, n + 10, 0, entitySprite, batch, 0, 0, 0))
+            pawns.add(PlayerPawn(n, n + 10, 0, entitySprite, batch, 0, 0, 0, null))
         }
     }
 
